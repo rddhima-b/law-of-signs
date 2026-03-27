@@ -1,0 +1,16 @@
+
+/* Unit buttons (seashells) */
+.btn1, .btn2, .btn3, .btn4, .btn5 {
+    display: block;
+    background-image: url("images/seashell-clipart.svg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 50px;
+    margin: 20px auto; /* centers them vertically */
+    border-width: 0;
+}

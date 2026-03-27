@@ -1,7 +1,119 @@
-.title{
-    font: serif;
-    color: green;
-    font-size: 300px;
+:root {
+    --deep-blue: #0081A7;
+    --teal: #00AFB9;
+    --cream: #FDFCDC;
+    --peach: #FED9B7;
+    --bg: #fff1e6;
+    --light-teal: #BEE1E6;
+    --light-green: #E2ECE9;
+}
+
+/* Reset and basics */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+    font-family: 'Chocolate Classical Sans', sans-serif;
+}
+
+body {
+    background: var(--bg);
+
+}
+
+.h1 {
+    background-position: center;
     position: absolute;
+    color: black;
+    font-size: 50px;
+    font-family: 'Chocolate Classical Sans', sans-serif;
+    background-color: var(--teal);
+    width: 100%;
+}
+
+/* Unit titles */
+.unittitle {
+    font: serif;
+    color: black;
+    font-size: 50px;
+}
+
+/* Footer */
+.footer {
+    background: var(--teal);
+    width: 100%;
+    position: absolute;
+    color: rgb(0,0,0);
+    font-size: 30px;
     text-align: center;
+    padding: 30px 0;
+}
+
+/* Background + overlay */
+.background {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: url('images/bg.jpeg') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(62,90,128,0.7), rgba(224,251,252,0.3));
+    z-index: 1;
+}
+
+/* Main container */
+.container {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 50px 40px;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    color: var(--cream);
+}
+
+h1.title {
+    font-size: 3rem;
+    color: var(--cream);
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+}
+
+.intro {
+    font-size: 1.2rem;
+    color: #E0FBFC;
+    margin-bottom: 35px;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+}
+
+/* Main "Start Learning" button */
+.btn {
+    display: inline-block;
+    padding: 14px 32px;
+    background-color: #EE6C4D; /* coral */
+    color: var(--cream);
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: 0.3s;
+    box-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn:hover {
+    background-color: #F07157; /* lighter coral hover */
+    transform: translateY(-3px);
 }
