@@ -100,6 +100,16 @@ h1.title {
     text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
 }
 
+.center-iframe {
+    width: 540px;
+    height: 960px;
+    text-align: center;
+}
+
+.center {
+    text-align: center;
+}
+
 /* Main "Start Learning" button */
 .btn {
     display: inline-block;
