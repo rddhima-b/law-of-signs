@@ -29,10 +29,15 @@ body {
     background-position: center;
     position: absolute;
     color: black;
+    text-align: center;
     font-size: 50px;
     font-family: 'Chocolate Classical Sans', sans-serif;
     background-color: var(--teal);
     width: 100%;
+}
+
+.icon{
+    float:left;
 }
 
 /* Unit titles */
@@ -139,6 +144,7 @@ h1.title {
     width: 540px;
     height: 960px;
     text-align: center;
+    margin-top: 100px;
 }
 
 .center {
