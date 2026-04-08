@@ -117,10 +117,10 @@ h1.title {
     box-shadow: 2px 4px 8px rgba(0,0,0,0.2);
 }
 
-.b2 {transform: translateX(200px); }
-.b3 {transform: translateX(400px); }
-.b4 {transform: translateX(600px); }
-.b5 {transform: translateX(800px); }
+.b2 {transform: translateX(1.5em); }
+.b3 {transform: translateX(3em); }
+.b4 {transform: translateX(4.5em); }
+.b5 {transform: translateX(6em); }
 
 .backb{
     display: block;
