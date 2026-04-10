@@ -45,6 +45,10 @@ body {
     font: serif;
     color: black;
     font-size: 50px;
+    background-color: var(--teal);
+    text-align: center;
+    width: 100%;
+    padding: .5em; 
 }
 
 /* Footer */
@@ -100,7 +104,7 @@ h1.title {
 
 
 
-.b1, .b2, .b3, .b4, .b5 {
+.b{
     background-size: cover;
     background-repeat: no-repeat;
     width: 150px;
@@ -138,7 +142,7 @@ h1.title {
 }
 
 .active {
-    background-color: var(--cream);
+    background-color: var(--deep-blue);
 }
 
 .buttonspacing .intro {
@@ -147,11 +151,7 @@ h1.title {
     margin: 0;
 }
 
-.buttonspacing .b1,
-.buttonspacing .b2,
-.buttonspacing .b3,
-.buttonspacing .b4,
-.buttonspacing .b5 {
+.buttonspacing .b{
     display: flex;
     justify-content: center;
     align-items: center;
