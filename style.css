@@ -188,6 +188,10 @@ h1.title {
     text-align: center;
 }
 
+h2{
+    padding-top: 5em;
+    text-align: center;
+}
 /* Main "Start Learning" button */
 .btn {
     display: inline-block;

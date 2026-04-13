@@ -13,23 +13,51 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap" rel="stylesheet">
-    
+  
 </head>
 <body>
 <header>
-  <p class="h1"> Practice Test
+  <p class="h1"> Practice 1
     <a href="beginning.html" class="icon">
         <img src="images/logo.png" alt="Home" style="width:100px">
     </a>
-  </p>
+  </p> 
 </header>
-    <h2>What letter is this?: </h2>
-    <div>
-      <iframe>
-    </div>
+
+    <h2>What letter is this? </h2>
     <div class="center">
-      <input type="text" id="answer" name="answer" placeholder="Type your answer here"></input>
-      <button onclick="checkAnswer()">Submit</button>
+      <iframe class="center-iframe" src="videos/d.mp4" title="signing for ?"></iframe>
+    </div>
+
+    <div class="center">
+          <style>
+        input[type="text"]:focus {
+            border-color: #4CAF50; /* Change border color when focused */
+            outline: none;
+        }
+    </style>
+
+      <input id="answerInput" type="text" name="username" placeholder="Type your answer here">
+      <button onclick="showAnswer()">Answer</button>
+
+<!-- Output area -->
+<div id="output"></div>
+
+<script>
+function showAnswer() {
+    const input = document.getElementById("answerInput").value.trim();
+    const output = document.getElementById("output");
+
+    if (input === "") {
+        output.textContent = "Please enter an answer.";
+        output.style.color = "red";
+    } else {
+        output.textContent = "Your answer: " + input;
+        output.style.color = "green";
+    }
+    const correctAnswer = "d";
+}
+</script>
     </div>
 </body>
 </html>
