@@ -2,61 +2,61 @@
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/service-worker.js")
-      .then(reg => console.log("Service Worker registered"))
+      .then(() => console.log("Service Worker registered"))
       .catch(err => console.log("Service Worker failed", err));
   });
 }
 
-// Lesson button navigation (Duolingo-style)
-document.querySelectorAll(".lesson").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const link = btn.dataset.link;
-    if (link) {
-      window.location.href = link;
-    }
-  });
-});
+window.onload = () => {
 
-const letters = ["a", "b", "c", "d", "e"];
+  const letters = document.body.dataset.letters.split(",");
+  let currentIndex = 0;
 
-let currentIndex = 0;
+  const title = document.getElementById("letterTitle");
+  const video = document.getElementById("letterVideo");
+  const nav = document.getElementById("letterNav");
 
-const title = document.getElementById("letterTitle");
-const video = document.getElementById("letterVideo");
-const nav = document.getElementById("letterNav");
+  function render() {
+    const currentLetter = letters[currentIndex];
 
-function render() {
-  // Update title
-  title.textContent = `Observe the sign for the letter ${letters[currentIndex].toUpperCase()}:`;
+    // Animate title
+    title.classList.remove("fade-slide");
+    void title.offsetWidth;
+    title.classList.add("fade-slide");
 
-  // Update video
-  video.src = `videos/${letters[currentIndex]}.mp4`;
+    title.textContent = `Observe the sign for the letter ${currentLetter.toUpperCase()}:`;
 
-  // Clear nav
-  nav.innerHTML = "";
+    // Animate video
+    video.classList.remove("fade-slide");
+    void video.offsetWidth;
+    video.classList.add("fade-slide");
 
-  // Rebuild buttons
-  letters.forEach((letter, index) => {
-    const p = document.createElement("p");
-    p.className = "intro";
+    video.src = `videos/${currentLetter}.mp4`;
 
-    const a = document.createElement("a");
-    a.textContent = `Letter ${letter.toUpperCase()}`;
-    a.className = "b";
+    // Build buttons
+    nav.innerHTML = "";
 
-    if (index === currentIndex) {
-      p.classList.add("active");
-    } else {
-      a.onclick = () => {
-        currentIndex = index;
-        render();
-      };
-    }
+    letters.forEach((letter, index) => {
+      const p = document.createElement("p");
+      p.className = "intro";
 
-    p.appendChild(a);
-    nav.appendChild(p);
-  });
-}
+      const a = document.createElement("a");
+      a.textContent = `Letter ${letter.toUpperCase()}`;
+      a.className = "b";
 
-// Initialize AFTER page loads
-window.onload = render;
+      if (index === currentIndex) {
+        p.classList.add("active");
+      } else {
+        a.onclick = () => {
+          currentIndex = index;
+          render();
+        };
+      }
+
+      p.appendChild(a);
+      nav.appendChild(p);
+    });
+  }
+
+  render();
+};

@@ -15,25 +15,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap" rel="stylesheet">
     
 </head>
-<body>
-     <header>
-  <p class="h1"> Lesson Three: Letters K, L, M, N, O, and P
+<body data-letters="k,l,m,n,o,p">
+
+<header>
+  <p class="h1">
+    Lesson Three: Letters K-P
     <a href="beginning.html" class="icon">
-        <img src="images/logo.png" alt="Home" style="width:100px">
+      <img src="images/logo.png" style="width:100px">
     </a>
   </p>
 </header>
-    <h2>Observe the sign for the letter K: </h2>
-    <div class="center">
-      <iframe class="center-iframe" src="videos/k.mp4" title="signing for k"></iframe>
-    </div>
-    <div class="buttonspacing">
-      <p class="intro"><a class="b active">Letter K</a></p>
-      <p class="intro"><a href="lesson3l.html" class="b">Letter L</a></p>
-      <p class="intro"><a href="lesson3m.html" class="b">Letter M</a></p>
-      <p class="intro"><a href="lesson3n.html" class="b">Letter N</a></p>
-      <p class="intro"><a href="lesson3o.html" class="b">Letter O</a></p>
-      <p class="intro"><a href="lesson3p.html" class="b">Letter P</a></p>
-  </div>
+
+<h2 id="letterTitle"></h2>
+
+<div class="center">
+  <video id="letterVideo" class="center-iframe" controls></video>
+</div>
+
+<div class="buttonspacing" id="letterNav"></div>
+
+
+
+<script src="app.js"></script>
 </body>
 </html>

@@ -15,24 +15,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap" rel="stylesheet">
     
 </head>
-<body>
-     <header>
-  <p class="h1"> Lesson Five: Letters V, W, X, Y, and Z
+<body data-letters="q,r,s,t,u">
+
+<header>
+  <p class="h1">
+    Lesson Four: Letters Q-U
     <a href="beginning.html" class="icon">
-        <img src="images/logo.png" alt="Home" style="width:100px">
+      <img src="images/logo.png" style="width:100px">
     </a>
   </p>
 </header>
-    <h2>Observe the sign for the letter W: </h2>
-    <div class="center">
-      <iframe class="center-iframe" src="videos/w.mp4" title="signing for w"></iframe>
-    </div>
-    <div class = "buttonspacing">
-            <p class="intro"><a href="lesson5v.html" class="b">Letter V</a></p>
-   <p class="intro"> <a class="active b">Letter W</a></p>
-   <p class="intro"><a href="lesson5x.html" class="b">Letter X</a></p>
-   <p class="intro"><a href="lesson5y.html" class="b">Letter Y</a></p>
-   <p class="intro"><a href="lesson5z.html" class="b">Letter Z</a></p>
-    </div>
+
+<h2 id="letterTitle"></h2>
+
+<div class="center">
+  <video id="letterVideo" class="center-iframe" controls></video>
+</div>
+
+<div class="buttonspacing" id="letterNav"></div>
+
+
+
+<script src="app.js"></script>
 </body>
 </html>

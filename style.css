@@ -141,8 +141,9 @@ h1.title {
     background-color: transparent;
 }
 
-.active {
+.intro.active .b {
     background-color: var(--deep-blue);
+    color: white;
 }
 
 .buttonspacing .intro {
@@ -159,6 +160,13 @@ h1.title {
     width: 100%;
 }
 
+.input{
+    border-color: black; 
+    border-radius: 5%;
+    border-width: .1em;
+    width: 4em; 
+    height: 2em;
+}
 .backb{
     display: block;
     background-size: cover;
@@ -209,3 +217,5 @@ h2{
     background-color: #F07157; /* lighter coral hover */
     transform: translateY(-3px);
 }
+
+
