@@ -24,7 +24,7 @@
   </p> 
 </header>
 
-    <h2>What letter is this? Please use lowercase. </h2>
+    <h2>What letter is this?</h2>
     <div class="center">
       <iframe class="center-iframe" src="videos/d.mp4" title="signing for ?"></iframe>
     </div>
@@ -32,33 +32,9 @@
     <div class="input">
       <input id="answerInput" type="text" name="username" placeholder="Type your answer here">
       <button onclick="showAnswer()">Answer</button>
-
-<!-- Output area -->
 <div id="output"></div>
-<button id="next" class="b">
+<button id="next" class="practiceb" onclick="window.location.href='practice2.html';">> 
 </div>
-<script>
-function showAnswer() {
-    
-const input = document.getElementById("answerInput").value.trim();
-const output = document.getElementById("output");
-const sound = new Audio('audio/correct.mp3');
-const correctAnswer = "d";
-
-    if (input == "d") {
-        output.textContent = "Your answer: " + input +  " is CORRECT!";
-        output.style.color = "green";
-        document.getElementById("next").innerHTML = "Next Practice";
-        output.getElementById('effect').addEventListener(() => {sound.currentTime = 0; 
-            sound.play().catch(err => console.error("Playback failed:", err));});
-    } 
-
-    else {
-        output.textContent = "WRONG";
-        output.style.color = "red";
-    }
-}
-</script>
-    </div>
+  <script src="showAnswer.js"></script>
 </body>
 </html>
