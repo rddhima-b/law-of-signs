@@ -35,27 +35,28 @@
 
 <!-- Output area -->
 <div id="output"></div>
-<button id="next" class="b"></div>
+<button id="next" class="b">
+</div>
 <script>
 function showAnswer() {
     
+const input = document.getElementById("answerInput").value.trim();
+const output = document.getElementById("output");
 const sound = new Audio('audio/correct.mp3');
-document.getElementById('effect').addEventListener(() => {sound.currentTime = 0; 
-sound.play().catch(err => console.error("Playback failed:", err));});
+const correctAnswer = "d";
 
-    const input = document.getElementById("answerInput").value.trim();
-    const output = document.getElementById("output");
-
-    if (input === "d") {
+    if (input == "d") {
         output.textContent = "Your answer: " + input +  " is CORRECT!";
         output.style.color = "green";
-        output.getElementById('effect').click(); // Trigger the sound effect
         document.getElementById("next").innerHTML = "Next Practice";
-    } else {
+        output.getElementById('effect').addEventListener(() => {sound.currentTime = 0; 
+            sound.play().catch(err => console.error("Playback failed:", err));});
+    } 
+
+    else {
         output.textContent = "WRONG";
         output.style.color = "red";
     }
-    const correctAnswer = "d";
 }
 </script>
     </div>
