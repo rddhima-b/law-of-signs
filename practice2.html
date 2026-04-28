@@ -15,9 +15,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap" rel="stylesheet">
   
 </head>
-<body>
+<body data-practice-letters="f,g,h,i,j" data-practice-complete-href="beginning.html">
 <header>
-  <p class="h1"> Practice A, B, C, D, E
+  <p class="h1"> Practice F-J
     <a href="beginning.html" class="icon">
         <img src="images/logo.png" alt="Home" style="width:100px">
     </a>
@@ -26,14 +26,16 @@
 
     <h2>What letter is this?</h2>
     <div class="center">
-      <iframe class="center-iframe" src="videos/d.mp4" title="signing for ?"></iframe>
+      <iframe class="center-iframe" src="videos/g.mp4" title="signing for ?"></iframe>
     </div>
 
     <div class="input">
       <input id="answerInput" type="text" name="username" placeholder="Type your answer here">
-      <button onclick="showAnswer()">Answer</button>      <div id="output"></div>
-      <button id="next" class="practiceb" onclick="window.location.href='practice2.html';" style="display: none;">Next Practice</button>
-    </div>
+      <button onclick="showAnswer()">Answer</button>
+      <button id="next" onclick="nextPractice()" style="display: none;">Next</button>
+<div class="practiceb" id="output">
+</div>
+</div>
   <script src="showAnswer.js"></script>
 </body>
 </html>

@@ -1,35 +1,28 @@
-const CACHE_NAME = "law-of-signs-v1";
+const CACHE_NAME = "law-of-signs-v3";
 
-const urlsToCache = [
+// files to cache initially
+const STATIC_ASSETS = [
   "/",
   "/index.html",
   "/beginning.html",
   "/style.css",
   "/unit-buttons.css",
-  "/app.js",
   "/images/bg.jpeg",
   "/images/icon.png"
 ];
 
-// Install
+// INSTALL
 self.addEventListener("install", event => {
+  self.skipWaiting(); // activate immediately
+
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
+      return cache.addAll(STATIC_ASSETS);
     })
   );
 });
 
-// Fetch (serve from cache if offline)
-self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
-  );
-});
-
-// Activate (clean old caches)
+// ACTIVATE
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -41,5 +34,58 @@ self.addEventListener("activate", event => {
         })
       )
     )
+  );
+
+  self.clients.claim(); // take control immediately
+});
+
+// FETCH
+self.addEventListener("fetch", event => {
+  const request = event.request;
+
+  // 🔥 Always get fresh JS + HTML (so updates apply)
+  if (
+    request.destination === "script" ||
+    request.destination === "document"
+  ) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, copy);
+          });
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // 🎨 Cache-first for images + CSS
+  if (
+    request.destination === "style" ||
+    request.destination === "image"
+  ) {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        return (
+          cached ||
+          fetch(request).then(response => {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, copy);
+            });
+            return response;
+          })
+        );
+      })
+    );
+    return;
+  }
+
+  // 🌐 Default: network-first fallback
+  event.respondWith(
+    fetch(request).catch(() => caches.match(request))
   );
 });

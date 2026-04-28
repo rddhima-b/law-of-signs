@@ -1,48 +1,46 @@
-/* Unit buttons (seashells) */
-.btn1, .btn2, .btn3, .btn4, .btn5{
-    display: block;
-    background-image: url("images/seashell-clipart.svg");
+.unit-button {
+    --button-offset: 0px;
+    --button-image: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 200px;
+    margin: 20px auto;
+    border: 0;
+    border-radius: 50%;
+    background-image: var(--button-image);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    text-align: center;
+    color: black;
     font-size: 50px;
-    margin: 20px auto;
-    border-width: 0;
     position: relative;
-    transform-origin: center;
-    transition: transform 0.2s ease;
-    color:black;
-}
-
-.btn6 {
-    color:black;
-    display: block;
-    background-image: url("images/coconut.png");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    text-align: center;
-    font-size: 50px;
-    margin: 20px auto;
-    border-width: 0;
-    position: relative;
+    transform: translateX(var(--button-offset));
     transform-origin: center;
     transition: transform 0.2s ease;
 }
-.btn1 { --x: -70px; transform: translateX(var(--x)); }
-.btn2 { --x: 70px; transform: translateX(var(--x)); }
-.btn3 { --x: 140px; transform: translateX(var(--x)); }
-.btn4 { --x: 70px; transform: translateX(var(--x)); }
-.btn5 { --x: -70px; transform: translateX(var(--x)); }
-.btn6 { --x: 70px; transform: translateX(var(--x)); }
 
-.btn1:hover, .btn2:hover, .btn3:hover, .btn4:hover, .btn5:hover, .btn6:hover{
-    transform: translateX(var(--x)) scale(1.1);
+.unit-button:hover {
+    transform: translateX(var(--button-offset)) scale(1.1);
 }
+
+.unit-button--seashell {
+    --button-image: url("images/seashell-clipart.svg");
+}
+
+.unit-button--coconut {
+    --button-image: url("images/coconut.png");
+}
+
+.btn1 { --button-offset: -70px; }
+.btn2 { --button-offset: 70px; }
+.btn3 { --button-offset: 140px; }
+.btn4 { --button-offset: 70px; }
+.btn5 { --button-offset: -70px; }
+.btn6 { --button-offset: -140px; }
+.btn7 { --button-offset: -70px; }
+.btn8 { --button-offset: 70px; }
+.btn9 { --button-offset: 140px; }
+.btn10 { --button-offset: 70px; }

@@ -1,23 +1,70 @@
-function showAnswer() {
-    
-const input = document.getElementById("answerInput").value.trim();
-const output = document.getElementById("output");
-const sound = new Audio('audio/correct.mp3');
-const correctAnswer = "d";
+console.log("🔥 Practice loaded");
 
-    if (input.toLowerCase() === correctAnswer) {
-        output.textContent = "Your answer: " + input +  " is CORRECT!";
-        output.style.color = "green";
-        document.getElementById("next").innerHTML = "Next Practice";
-        //document.getElementById('effect').addEventListener(() => {sound.currentTime = 0; 
-        // sound.play().catch(err => console.error("Playback failed:", err));});
-        document.getElementById("next").style.display = "inline-block"; 
-        sound.currentTime = 0;
-        sound.play().catch(err => console.error("Playback failed:", err));
-    } 
+function getVideoUrl(letter) {
+  const { data } = window.supabaseClient
+    .storage
+    .from("videos")
+    .getPublicUrl(`videos/${letter}.mp4`);
 
-    else {
-        output.textContent = "WRONG";
-        output.style.color = "red";
-    }
+  return data.publicUrl;
 }
+
+const correctSound = new Audio("audio/correct.mp3");
+const wrongSound = new Audio("audio/wrong.mp3");
+
+window.addEventListener("DOMContentLoaded", () => {
+  const letters = document.body.dataset.practiceLetters.split(",");
+
+  let index = 0;
+
+  const video = document.getElementById("practiceVideo");
+  const input = document.getElementById("answerInput");
+  const output = document.getElementById("output");
+  const nextBtn = document.getElementById("next");
+  const answer = document.getElementById("answer");
+
+  function loadLetter() {
+    const letter = letters[index];
+
+    console.log("👉 Letter:", letter);
+
+    const url = getVideoUrl(letter);
+
+    video.src = url;
+    video.load();
+    video.play().catch(() => {});
+
+    input.value = "";
+    output.innerHTML = "";
+    nextBtn.style.display = "none";
+  }
+
+  window.showAnswer = () => {
+    const correct = letters[index].toLowerCase();
+    const user = input.value.trim().toLowerCase();
+
+    if (user === correct) {
+      output.innerHTML = "Correct!";
+      correctSound.play().catch(() => {});
+      nextBtn.style.display = "inline-block";
+      answer.style.display = "none";
+    } else {
+      output.innerHTML = "Try again!";
+      wrongSound.play().catch(() => {});
+    }
+  };
+
+  window.nextPractice = () => {
+    index++;
+
+    if (index >= letters.length) {
+      window.location.href =
+        document.body.dataset.practiceCompleteHref;
+      return;
+    }
+
+    loadLetter();
+  };
+
+  loadLetter();
+});

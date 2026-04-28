@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -15,9 +15,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap" rel="stylesheet">
   
 </head>
-<body>
+<body data-practice-letters="a,b,c,d,e" data-practice-complete-href="beginning.html">
 <header>
-  <p class="h1"> Practice A, B, C, D, E
+  <p class="h1"> Practice A-E
     <a href="beginning.html" class="icon">
         <img src="images/logo.png" alt="Home" style="width:100px">
     </a>
@@ -26,15 +26,81 @@
 
     <h2>What letter is this?</h2>
     <div class="center">
-      <iframe class="center-iframe" src="videos/d.mp4" title="signing for ?"></iframe>
+      <iframe class="center-iframe" src="videos/a.mp4" title="signing for ?"></iframe>
     </div>
 
     <div class="input">
       <input id="answerInput" type="text" name="username" placeholder="Type your answer here">
       <button onclick="showAnswer()">Answer</button>
-<div id="output"></div>
-<button id="next" class="practiceb" onclick="window.location.href='practice2.html';">> 
+      <button id="next" onclick="nextPractice()" style="display: none;">Next</button>
+<div class="practiceb" id="output">
+</div>
 </div>
   <script src="showAnswer.js"></script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Law Of Signs - Practice</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="unit-buttons.css">
+  <link rel="icon" type="image/x-icon" href="images/icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap" rel="stylesheet">
+</head>
+
+<body
+  data-practice-letters="a,b,c,d,e"
+  data-practice-complete-href="beginning.html"
+>
+
+<header>
+  <p class="h1">
+    Practice A–E
+    <a href="beginning.html" class="icon">
+      <img src="images/logo.png" alt="Home" style="width:100px">
+    </a>
+  </p>
+</header>
+
+<h2>What letter is this?</h2>
+
+<!-- VIDEO (Supabase powered) -->
+<div class="center">
+  <video
+    id="practiceVideo"
+    class="center-iframe"
+    controls
+    muted
+  ></video>
+</div>
+
+<!-- INPUT AREA -->
+<div class="input">
+  <input
+    id="answerInput"
+    type="text"
+    placeholder="Type your answer here"
+    autocomplete="off"
+  >
+
+  <button id="answer" onclick="showAnswer()">Answer</button>
+  <button id="next" onclick="nextPractice()" style="display:none;">Next</button>
+
+  <div class="practiceb" id="output"></div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabaseClient.js"></script>
+<script src="showAnswer.js"></script>
+
 </body>
 </html>
