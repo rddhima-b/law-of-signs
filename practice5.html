@@ -15,7 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap" rel="stylesheet">
   
 </head>
-<body data-practice-letters="v,w,x,y,z">
+<body data-practice-letters="v,w,x,y,z" data-practice-complete-href="beginning.html">
 <header>
   <p class="h1"> Practice V-Z
     <a href="beginning.html" class="icon">
@@ -26,16 +26,18 @@
 
     <h2>What letter is this?</h2>
     <div class="center">
-      <iframe class="center-iframe" src="videos/v.mp4" title="signing for ?"></iframe>
+      <video id="practiceVideo" class="center-iframe" controls muted></video>
     </div>
 
     <div class="input">
-      <input id="answerInput" type="text" name="username" placeholder="Type your answer here">
-      <button onclick="showAnswer()">Answer</button>
+      <input id="answerInput" type="text" name="username" placeholder="Type your answer here" autocomplete="off">
+      <button id="answer" onclick="showAnswer()">Answer</button>
       <button id="next" onclick="nextPractice()" style="display: none;">Next</button>
 <div class="practiceb" id="output">
 </div>
 </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabaseClient.js"></script>
   <script src="showAnswer.js"></script>
 </body>
 </html>

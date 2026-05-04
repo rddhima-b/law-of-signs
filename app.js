@@ -1,88 +1,3 @@
-// console.log("Supabase:", window.supabaseClient);
-// console.log("CLIENT:", window.supabaseClient);
-// console.log("STORAGE:", window.supabaseClient?.storage);
-// console.log("🔥 NEW APP.JS LOADED");
-
-// function getVideoUrl(letter) {
-//   const { data } = window.supabaseClient
-//     .storage
-//     .from("videos")
-//     .getPublicUrl(`videos/${letter}.mp4`);
-
-//   return data.publicUrl;
-// }
-
-// // Service worker
-// if ("serviceWorker" in navigator) {
-//   window.addEventListener("load", () => {
-//     navigator.serviceWorker.register("/service-worker.js");
-//   });
-// }
-
-// window.onload = () => {
-
-//   const letters = document.body.dataset.letters.split(",");
-//   let currentIndex = 0;
-
-//   const title = document.getElementById("letterTitle");
-//   const video = document.getElementById("letterVideo");
-//   const nav = document.getElementById("letterNav");
-
-//   // preload
-//   letters.forEach(letter => {
-//     const vid = document.createElement("video");
-//     vid.src = getVideoUrl(letter);
-//     vid.preload = "auto";
-//   });
-
-//   function render() {
-//     const currentLetter = letters[currentIndex];
-
-//     title.textContent =
-//       `Observe the sign for the letter ${currentLetter.toUpperCase()}:`;
-
-//     video.src = getVideoUrl(currentLetter);
-//     video.load();
-//     video.play().catch(() => {});
-
-//     nav.innerHTML = "";
-
-//     letters.forEach((letter, index) => {
-//       const p = document.createElement("p");
-//       const a = document.createElement("a");
-
-//       p.classList.add("intro");
-//       a.classList.add("b");
-//       a.textContent = `Letter ${letter.toUpperCase()}`;
-
-//       if (index === currentIndex) {
-//         p.classList.add("active");
-//       } else {
-//         a.onclick = () => {
-//           currentIndex = index;
-//           render();
-//         };
-//       }
-
-//       p.appendChild(a);
-//       nav.appendChild(p);
-//     });
-
-//     console.log("Current letter:", currentLetter);
-// console.log("Final URL:", getVideoUrl(currentLetter));
-//   }
-
-//   render();
-// };
-
-console.log("🔥 NEW APP.JS LOADED");
-console.log("Supabase:", window.supabaseClient);
-console.log("CLIENT:", window.supabaseClient);
-console.log("STORAGE:", window.supabaseClient?.storage);
-
-// -----------------------------
-// Supabase Video URL Function
-// -----------------------------
 function getVideoUrl(letter) {
   if (!letter) {
     console.error("❌ Letter is undefined");
@@ -96,58 +11,75 @@ function getVideoUrl(letter) {
     .from("videos")
     .getPublicUrl(path);
 
-  console.log("📦 Requested path:", path);
-  console.log("🔗 Final URL:", data.publicUrl);
-
   return data.publicUrl;
 }
 
-// -----------------------------
-// Service Worker
-// -----------------------------
-if ("serviceWorker" in navigator) {
+if ("serviceWorker" in navigator && !window.siteServiceWorkerRegistered) {
+  window.siteServiceWorkerRegistered = true;
+
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js");
+    navigator.serviceWorker.register("/service-worker.js").catch((error) => {
+      console.error("Failed to register service worker", error);
+    });
   });
 }
 
-// -----------------------------
-// Main App Logic
-// -----------------------------
-window.onload = () => {
-  const letters = document.body.dataset.letters.split(",");
+window.addEventListener("DOMContentLoaded", async () => {
+  const letterList = document.body.dataset.letters;
+
+  if (!letterList) {
+    return;
+  }
+
+  const letters = letterList.split(",");
   let currentIndex = 0;
+  const pageKey = window.supabaseApp?.getPageKey?.() ?? "lesson";
 
   const title = document.getElementById("letterTitle");
   const video = document.getElementById("letterVideo");
   const nav = document.getElementById("letterNav");
 
-  console.log("📚 Letters loaded:", letters);
+  if (!title || !video || !nav) {
+    return;
+  }
 
-  // preload videos
-  letters.forEach(letter => {
+  const savedProgress = await window.supabaseApp?.loadProgress?.(pageKey);
+
+  if (savedProgress?.current_index !== undefined && savedProgress?.current_index !== null) {
+    currentIndex = Math.min(savedProgress.current_index, letters.length - 1);
+  }
+
+  letters.forEach((letter) => {
     const vid = document.createElement("video");
     vid.src = getVideoUrl(letter);
     vid.preload = "auto";
   });
 
-  function render() {
+  async function persistProgress(currentLetter) {
+    await window.supabaseApp?.saveProgress?.({
+      pageKey,
+      pageType: "lesson",
+      currentIndex,
+      currentValue: currentLetter,
+      completed: currentIndex === letters.length - 1,
+      totalItems: letters.length,
+      meta: { letters },
+    });
+  }
+
+  async function render() {
     const currentLetter = letters[currentIndex];
 
-    console.log("👉 Current letter:", currentLetter);
-
-    title.textContent =
-      `Observe the sign for the letter ${currentLetter.toUpperCase()}:`;
+    title.textContent = `Observe the sign for the letter ${currentLetter.toUpperCase()}:`;
 
     const url = getVideoUrl(currentLetter);
 
-    // VIDEO LOAD
+    await persistProgress(currentLetter);
     video.pause();
     video.src = url;
     video.load();
     video.play().catch(() => {});
 
-    // NAV UI
     nav.innerHTML = "";
 
     letters.forEach((letter, index) => {
@@ -163,16 +95,14 @@ window.onload = () => {
       } else {
         a.onclick = () => {
           currentIndex = index;
-          render();
+          void render();
         };
       }
 
       p.appendChild(a);
       nav.appendChild(p);
     });
-
-    console.log("🎬 Final video URL:", url);
   }
 
-  render();
-};
+  await render();
+});

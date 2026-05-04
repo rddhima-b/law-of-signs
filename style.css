@@ -30,14 +30,29 @@ body {
     position: absolute;
     color: black;
     text-align: center;
-    font-size: 50px;
+    font-size: clamp(28px, 7vw, 50px);
+    line-height: 1.1;
     font-family: 'Chocolate Classical Sans', sans-serif;
     background-color: var(--teal);
     width: 100%;
+    min-height: 92px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px clamp(84px, 18vw, 132px);
+    overflow-wrap: anywhere;
 }
 
 .icon {
-    float:left;
+    position: absolute;
+    left: clamp(8px, 3vw, 24px);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.icon img {
+    width: clamp(64px, 14vw, 100px) !important;
+    height: auto;
 }
 
 /* Unit titles */
@@ -55,11 +70,218 @@ body {
 .footer {
     background: var(--teal);
     width: 100%;
-    position: absolute;
+    position: relative;
     color: rgb(0,0,0);
     font-size: 30px;
     text-align: center;
     padding: 30px 0;
+}
+
+.course-topbar,
+.course-footer {
+    width: 100%;
+    background: var(--teal);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 24px;
+    position: relative;
+}
+
+.course-topbar {
+    border-bottom: 4px solid rgba(0, 0, 0, 0.06);
+}
+
+.course-footer {
+    justify-content: center;
+}
+
+.course-topbar .unittitle {
+    background: transparent;
+    width: 100%;
+    padding: 0;
+    text-align: left;
+    font-size: 44px;
+    margin: 0;
+}
+
+
+.dashboard-shell {
+    width: min(1100px, 94vw);
+    margin: 0 auto;
+    padding: 32px 0 48px;
+}
+
+
+
+.dashboard-note {
+    margin-bottom: 22px;
+    color: rgba(31, 41, 51, 0.78);
+    font-size: 1.05rem;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.hero-caption {
+    color: var(--cream);
+    font-size: 1rem;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.account-footer-links {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 26px;
+}
+
+.auth-panel {
+    background: rgba(253, 252, 220, 0.8);
+    border: 1px solid rgba(0, 129, 167, 0.15);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+    margin-bottom: 28px;
+}
+
+.auth-panel .unittitle {
+    background: transparent;
+    padding: 0;
+    margin-top: 8px;
+}
+
+.eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.85rem;
+    color: var(--deep-blue);
+    font-weight: 700;
+}
+
+.auth-status {
+    margin: 16px 0 20px;
+    font-size: 1.05rem;
+}
+
+.auth-form {
+    display: grid;
+    gap: 14px;
+    max-width: 540px;
+}
+
+.auth-form label {
+    display: grid;
+    gap: 8px;
+    font-size: 1rem;
+    color: #1f2933;
+}
+
+.auth-form input {
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font: inherit;
+    background: white;
+}
+
+.auth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.btn--ghost {
+    background-color: var(--deep-blue);
+}
+
+.btn--small {
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    background-color: #6b7280;
+}
+
+.progress-summary {
+    display: grid;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.progress-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.progress-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    text-transform: capitalize;
+}
+
+.progress-card p,
+.muted {
+    color: rgba(31, 41, 51, 0.72);
+    font-size: 0.95rem;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: var(--light-teal);
+    color: #0f172a;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.unit-grid {
+    padding-bottom: 24px;
+}
+
+.auth-panel--signed-in .auth-form {
+    opacity: 0.9;
+}
+
+@media (max-width: 720px) {
+    .course-topbar,
+    .course-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .course-topbar .unittitle {
+        font-size: 34px;
+    }
+
+    .progress-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .auth-panel {
+        padding: 20px;
+    }
+
+    .dashboard-shell {
+        width: min(100%, 100vw);
+        padding-top: 16px;
+    }
 }
 
 /* Background + overlay */
@@ -138,6 +360,58 @@ h1.title {
     margin: 0 auto; 
 }
 
+.practice-complete {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 24px;
+    color: #1f2933;
+    background: rgba(253, 252, 220, 0.9);
+    border: 1px solid rgba(0, 129, 167, 0.18);
+    border-radius: 12px;
+}
+
+.practice-complete-view[hidden] {
+    display: none;
+}
+
+.practice-complete-view {
+    position: relative;
+    z-index: 5;
+    width: min(680px, 92vw);
+    margin: 0 auto 48px;
+    padding-top: 230px;
+    text-align: center;
+}
+
+@media (max-width: 720px) {
+    .practice-complete-view {
+        padding-top: 190px;
+    }
+}
+
+.practice-complete h3 {
+    margin: 0;
+    color: var(--deep-blue);
+    font-size: 32px;
+}
+
+.practice-complete p {
+    margin: 0;
+}
+
+.practice-complete .btn {
+    margin-top: 8px;
+}
+
+.practice-complete button.btn {
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+}
+
 .buttonspacing {
     display: flex;
     flex-wrap: nowrap;
@@ -161,14 +435,28 @@ h1.title {
     flex: 1 1 0;
     min-width: 0;
     margin: 0;
+    container-type: inline-size;
 }
 
 .buttonspacing .b{
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10px 16px;
+    min-height: 50px;
+    padding: 8px clamp(4px, 1.5vw, 16px);
     width: 100%;
+    font-size: clamp(9px, 2.8vw, 20px);
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+@supports (font-size: 1cqw) {
+    .buttonspacing .b {
+        font-size: clamp(8px, 21cqw, 20px);
+        padding-left: clamp(2px, 5cqw, 16px);
+        padding-right: clamp(2px, 5cqw, 16px);
+    }
 }
 
 .input{
@@ -220,7 +508,7 @@ h2{
 .btn {
     display: inline-block;
     padding: 14px 32px;
-    background-color: #EE6C4D; /* coral */
+    background-color: var(--coral); /* coral */
     color: var(--cream);
     text-decoration: none;
     font-weight: 600;
@@ -232,6 +520,18 @@ h2{
 .btn:hover {
     background-color: #F07157; /* lighter coral hover */
     transform: translateY(-3px);
+}
+
+h1.unittitle .account-link {
+    display: inline-block;
+    padding: 14px 32px;
+    background-color: var(--coral);
+    color: var(--cream);
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: 0.3s;
+    box-shadow: 2px 4px 8px rgba(0,0,0,0.2);
 }
 
 .output {

@@ -1,33 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <title>Law Of Signs</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="unit-buttons.css">
-    <link rel="icon" type="image/x-icon" href="images/icon.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">   
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap" rel="stylesheet">
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Law Of Signs</title>
+        <link rel="manifest" href="manifest.json">
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="unit-buttons.css">
+        <link rel="icon" type="image/x-icon" href="images/icon.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap" rel="stylesheet">
+        <style>
+            h1.unittitle {
+                position: relative;
+            }
+            
+            h1.unittitle .account-link {
+                position: absolute;
+                top: 50%;
+                right: 0;
+                transform: translateY(-50%);
+                display: inline-block;
+                padding: 14px 32px;
+                background-color: #EE6C4D;
+                color: #FDFCDC;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 1rem;
+                border-radius: 12px;
+                transition: 0.3s;
+                box-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+            }
+        </style>
 </head>
 <body>
-   <h1 class="unittitle">UNIT 1: Alphabet </h1>
+    <header class="course-topbar">
+        <h1 class="unittitle">
+            UNIT 1: Alphabet
+            <a class="account-link" href="account.html">Account</a>
+        </h1>
+    </header>
 
-    <button class="unit-button unit-button--seashell btn1" onclick="location.href='lesson1.html'">1</button>
-    <button class="unit-button unit-button--seashell btn2" onclick="location.href='lesson2.html'">2</button>
-    <button class="unit-button unit-button--seashell btn3" onclick="location.href='lesson3.html'">3</button>
-    <button class="unit-button unit-button--seashell btn4" onclick="location.href='lesson4.html'">4</button>
-    <button class="unit-button unit-button--seashell btn5" onclick="location.href='lesson5.html'">5</button>
-    <button class="unit-button unit-button--coconut btn6" onclick="location.href='practice1.html'">Practice 1</button>
-    <button class="unit-button unit-button--coconut btn7" onclick="location.href='practice2.html'">Practice 2</button>
-    <button class="unit-button unit-button--coconut btn8" onclick="location.href='practice3.html'">Practice 3</button>
-    <button class="unit-button unit-button--coconut btn9" onclick="location.href='practice4.html'">Practice 4</button>
-    <button class="unit-button unit-button--coconut btn10" onclick="location.href='practice5.html'">Practice 5</button>
+    <div class="dashboard-shell">
+
+        <section class="unit-grid" aria-label="Lessons and practice">
+            <button class="unit-button unit-button--seashell btn1" onclick="location.href='lesson1.html'">1</button>
+            <button class="unit-button unit-button--seashell btn2" onclick="location.href='lesson2.html'">2</button>
+            <button class="unit-button unit-button--seashell btn3" onclick="location.href='lesson3.html'">3</button>
+            <button class="unit-button unit-button--seashell btn4" onclick="location.href='lesson4.html'">4</button>
+            <button class="unit-button unit-button--seashell btn5" onclick="location.href='lesson5.html'">5</button>
+            <button class="unit-button unit-button--coconut btn6" onclick="location.href='practice1.html'">Practice 1</button>
+            <button class="unit-button unit-button--coconut btn7" onclick="location.href='practice2.html'">Practice 2</button>
+            <button class="unit-button unit-button--coconut btn8" onclick="location.href='practice3.html'">Practice 3</button>
+            <button class="unit-button unit-button--coconut btn9" onclick="location.href='practice4.html'">Practice 4</button>
+            <button class="unit-button unit-button--coconut btn10" onclick="location.href='practice5.html'">Practice 5</button>
+        </section>
+    </div>
+
+    <footer class="course-footer footer">More lessons coming soon! <a style="text-decoration: none;">🤟</a></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabaseClient.js"></script>
 </body>
-</body>
-<p class="footer">More lessons coming soon! <a style="text-decoration: none;">🤟</a></p>
 </html>

@@ -1,6 +1,5 @@
-const CACHE_NAME = "law-of-signs-v3";
+const CACHE_NAME = "law-of-signs-cache";
 
-// files to cache initially
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -8,26 +7,24 @@ const STATIC_ASSETS = [
   "/style.css",
   "/unit-buttons.css",
   "/images/bg.jpeg",
-  "/images/icon.png"
+  "/images/icon.png",
 ];
 
-// INSTALL
-self.addEventListener("install", event => {
-  self.skipWaiting(); // activate immediately
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
+    caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
     })
   );
 });
 
-// ACTIVATE
-self.addEventListener("activate", event => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
+    caches.keys().then((keys) =>
       Promise.all(
-        keys.map(key => {
+        keys.map((key) => {
           if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
@@ -36,23 +33,18 @@ self.addEventListener("activate", event => {
     )
   );
 
-  self.clients.claim(); // take control immediately
+  self.clients.claim();
 });
 
-// FETCH
-self.addEventListener("fetch", event => {
+self.addEventListener("fetch", (event) => {
   const request = event.request;
 
-  // 🔥 Always get fresh JS + HTML (so updates apply)
-  if (
-    request.destination === "script" ||
-    request.destination === "document"
-  ) {
+  if (request.destination === "script" || request.destination === "document") {
     event.respondWith(
       fetch(request)
-        .then(response => {
+        .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
+          caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, copy);
           });
           return response;
@@ -62,18 +54,14 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // 🎨 Cache-first for images + CSS
-  if (
-    request.destination === "style" ||
-    request.destination === "image"
-  ) {
+  if (request.destination === "style" || request.destination === "image") {
     event.respondWith(
-      caches.match(request).then(cached => {
+      caches.match(request).then((cached) => {
         return (
           cached ||
-          fetch(request).then(response => {
+          fetch(request).then((response) => {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
+            caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, copy);
             });
             return response;
@@ -84,8 +72,5 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // 🌐 Default: network-first fallback
-  event.respondWith(
-    fetch(request).catch(() => caches.match(request))
-  );
+  event.respondWith(fetch(request).catch(() => caches.match(request)));
 });

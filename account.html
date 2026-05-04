@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Law Of Signs - Account</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="unit-buttons.css">
+    <link rel="icon" type="image/x-icon" href="images/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="dashboard-shell">
+    <section class="auth-panel" id="authPanel">
+      <p class="eyebrow">Account</p>
+      <h1 class="unittitle">Save Your Progress</h1>
+
+      <p class="auth-status" id="authStatus">Sign in or create an account to save your progress.</p>
+
+      <form class="auth-form" id="authForm">
+        <label>
+          Email
+          <input id="authEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        </label>
+        <label>
+          Password
+          <input id="authPassword" type="password" placeholder="Choose a password" autocomplete="current-password">
+        </label>
+        <div class="auth-actions">
+          <button type="button" class="btn btn--ghost" id="signUpButton">Sign up</button>
+          <button type="button" class="btn" id="signInButton">Sign in</button>
+          <button type="button" class="btn btn--small" id="signOutButton" hidden>Sign out</button>
+        </div>
+      </form>
+
+      <div class="progress-summary" id="progressSummary"></div>
+    </section>
+
+    <div class="account-footer-links">
+      <a class="btn btn--ghost" href="beginning.html">Back to lessons</a>
+      <a class="btn" href="index.html">Home</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabaseClient.js"></script>
+</body>
+</html>
