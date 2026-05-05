@@ -490,11 +490,14 @@ h1.title {
 }
 
 .center-iframe {
-    width: 540px;
-    height: 960px;
-    text-align: center;
-    margin-top: 100px;
+    display: block;
+    width: min(540px, 92vw, calc(70vh * 9 / 16));
+    height: min(960px, calc(92vw * 16 / 9), 70vh);
+    aspect-ratio: 9 / 16;
+    object-fit: contain;
+    margin: 0 auto;
 }
+
 
 .center {
     text-align: center;
