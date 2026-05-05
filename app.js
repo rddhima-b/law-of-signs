@@ -1,3 +1,5 @@
+const SUPABASE_VIDEO_BASE_URL = "https://zophxtwisykqfhkfgmbp.supabase.co/storage/v1/object/public/videos/videos/";
+
 function getVideoUrl(letter) {
   if (!letter) {
     console.error("❌ Letter is undefined");
@@ -5,13 +7,23 @@ function getVideoUrl(letter) {
   }
 
   const path = `videos/${letter}.mp4`;
+  const fallbackUrl = `${SUPABASE_VIDEO_BASE_URL}${encodeURIComponent(letter)}.mp4`;
 
-  const { data } = window.supabaseClient
-    .storage
-    .from("videos")
-    .getPublicUrl(path);
+  if (!window.supabaseClient?.storage) {
+    return fallbackUrl;
+  }
 
-  return data.publicUrl;
+  try {
+    const { data } = window.supabaseClient
+      .storage
+      .from("videos")
+      .getPublicUrl(path);
+
+    return data?.publicUrl || fallbackUrl;
+  } catch (error) {
+    console.error("Failed to build Supabase video URL", error);
+    return fallbackUrl;
+  }
 }
 
 if ("serviceWorker" in navigator && !window.siteServiceWorkerRegistered) {
@@ -33,6 +45,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const letters = letterList.split(",");
   let currentIndex = 0;
+  let userHasInteracted = false;
   const pageKey = window.supabaseApp?.getPageKey?.() ?? "lesson";
 
   const title = document.getElementById("letterTitle");
@@ -41,12 +54,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   if (!title || !video || !nav) {
     return;
-  }
-
-  const savedProgress = await window.supabaseApp?.loadProgress?.(pageKey);
-
-  if (savedProgress?.current_index !== undefined && savedProgress?.current_index !== null) {
-    currentIndex = Math.min(savedProgress.current_index, letters.length - 1);
   }
 
   letters.forEach((letter) => {
@@ -67,14 +74,39 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  async function render() {
+  function saveProgressInBackground(currentLetter) {
+    void persistProgress(currentLetter).catch((error) => {
+      console.error("Failed to save lesson progress", error);
+    });
+  }
+
+  async function restoreProgress() {
+    try {
+      const savedProgress = await window.supabaseApp?.loadProgress?.(pageKey);
+
+      if (userHasInteracted) {
+        return;
+      }
+
+      if (savedProgress?.current_index !== undefined && savedProgress?.current_index !== null) {
+        currentIndex = Math.min(savedProgress.current_index, letters.length - 1);
+        render({ save: false });
+        return;
+      }
+
+      saveProgressInBackground(letters[currentIndex]);
+    } catch (error) {
+      console.error("Failed to load lesson progress", error);
+    }
+  }
+
+  function render({ save = true } = {}) {
     const currentLetter = letters[currentIndex];
 
     title.textContent = `Observe the sign for the letter ${currentLetter.toUpperCase()}:`;
 
     const url = getVideoUrl(currentLetter);
 
-    await persistProgress(currentLetter);
     video.pause();
     video.src = url;
     video.load();
@@ -94,15 +126,21 @@ window.addEventListener("DOMContentLoaded", async () => {
         p.classList.add("active");
       } else {
         a.onclick = () => {
+          userHasInteracted = true;
           currentIndex = index;
-          void render();
+          render();
         };
       }
 
       p.appendChild(a);
       nav.appendChild(p);
     });
+
+    if (save) {
+      saveProgressInBackground(currentLetter);
+    }
   }
 
-  await render();
+  render({ save: false });
+  void restoreProgress();
 });

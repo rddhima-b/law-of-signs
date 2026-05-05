@@ -37,6 +37,21 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  // ❌ NEVER intercept Supabase storage
+  if (url.hostname.includes("supabase.co")) {
+    return;
+  }
+
+  // ❌ NEVER intercept media (fixes video/audio streaming)
+  if (
+    event.request.destination === "video" ||
+    event.request.destination === "audio"
+  ) {
+    return;
+  }
+
   const request = event.request;
 
   if (request.destination === "script" || request.destination === "document") {

@@ -211,31 +211,83 @@ body {
 
 .progress-summary {
     display: grid;
-    gap: 12px;
+    gap: 28px;
     margin-top: 24px;
 }
 
+.progress-section {
+    display: grid;
+    gap: 14px;
+}
+
+.progress-section h2 {
+    padding-top: 0;
+    text-align: left;
+    color: var(--deep-blue);
+    font-size: 1.45rem;
+}
+
+.progress-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+}
+
 .progress-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    display: grid;
+    gap: 12px;
     padding: 16px 18px;
-    border-radius: 18px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.75);
     border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.progress-card__main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 .progress-card h3 {
     font-size: 1.1rem;
     margin-bottom: 4px;
-    text-transform: capitalize;
 }
 
 .progress-card p,
 .muted {
     color: rgba(31, 41, 51, 0.72);
     font-size: 0.95rem;
+}
+
+.progress-kind {
+    color: var(--deep-blue);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.progress-meter {
+    width: 100%;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(0, 129, 167, 0.13);
+}
+
+.progress-meter span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--coral);
+}
+
+.progress-card--lesson .progress-meter span {
+    background: var(--deep-blue);
+}
+
+.progress-card__link {
+    justify-self: start;
 }
 
 .status-pill {
@@ -270,6 +322,10 @@ body {
     }
 
     .progress-card {
+        padding: 14px;
+    }
+
+    .progress-card__main {
         flex-direction: column;
         align-items: flex-start;
     }

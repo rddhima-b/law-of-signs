@@ -17,6 +17,7 @@ const authState = {
   user: null,
   initialized: false,
 };
+let progressRefreshId = 0;
 
 function getPageKey() {
   const fileName = window.location.pathname.split("/").pop() || "index.html";
@@ -35,6 +36,10 @@ function setMessage(element, message, isError = false) {
 function formatAuthError(error) {
   const message = error?.message ?? "";
 
+  if (/timed out|taking too long/i.test(message)) {
+    return "This is taking too long. Check your connection and try again.";
+  }
+
   if (/for security purposes/i.test(message)) {
     return "Please wait a moment and try again.";
   }
@@ -44,6 +49,20 @@ function formatAuthError(error) {
   }
 
   return message || "Authentication failed.";
+}
+
+function withTimeout(promise, timeoutMs, timeoutMessage) {
+  let timeoutId;
+
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => {
+    clearTimeout(timeoutId);
+  });
 }
 
 async function ensureProfile(user) {
@@ -65,6 +84,16 @@ async function ensureProfile(user) {
   }
 
   return user;
+}
+
+function syncProfileInBackground(user) {
+  if (!user) {
+    return;
+  }
+
+  void ensureProfile(user).catch((error) => {
+    console.error("Failed to sync profile", error);
+  });
 }
 
 async function getCurrentUser() {
@@ -118,22 +147,139 @@ async function loadAllProgress() {
   return data ?? [];
 }
 
-function getPracticeScoreText(row) {
-  if (row.page_type !== "practice") {
-    return "";
+const courseProgressItems = [
+  { key: "lesson1", type: "lesson", label: "Lesson 1: A-E", href: "lesson1.html", totalItems: 5 },
+  { key: "lesson2", type: "lesson", label: "Lesson 2: F-J", href: "lesson2.html", totalItems: 5 },
+  { key: "lesson3", type: "lesson", label: "Lesson 3: K-P", href: "lesson3.html", totalItems: 6 },
+  { key: "lesson4", type: "lesson", label: "Lesson 4: Q-U", href: "lesson4.html", totalItems: 5 },
+  { key: "lesson5", type: "lesson", label: "Lesson 5: V-Z", href: "lesson5.html", totalItems: 5 },
+  { key: "practice1", type: "practice", label: "Practice A-E", href: "practice1.html", totalItems: 5 },
+  { key: "practice2", type: "practice", label: "Practice F-J", href: "practice2.html", totalItems: 5 },
+  { key: "practice3", type: "practice", label: "Practice K-P", href: "practice3.html", totalItems: 6 },
+  { key: "practice4", type: "practice", label: "Practice Q-U", href: "practice4.html", totalItems: 5 },
+  { key: "practice5", type: "practice", label: "Practice V-Z", href: "practice5.html", totalItems: 5 },
+];
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function getProgressTotal(row, fallbackTotal) {
+  if (Array.isArray(row?.meta?.letters)) {
+    return row.meta.letters.length;
   }
 
-  const firstTryCorrect = row.meta?.firstTryCorrect;
-  const totalQuestions = Array.isArray(row.meta?.letters)
-    ? row.meta.letters.length
-    : row.total_items;
+  return row?.total_items || fallbackTotal || 0;
+}
+
+function getPracticeScore(row, fallbackTotal) {
+  const totalQuestions = getProgressTotal(row, fallbackTotal);
+  const firstTryCorrect = row?.meta?.firstTryCorrect;
 
   if (!Number.isInteger(firstTryCorrect) || !totalQuestions) {
-    return "";
+    return null;
   }
 
-  const percentCorrect = Math.round((firstTryCorrect / totalQuestions) * 100);
-  return `Score: ${percentCorrect}% (${firstTryCorrect}/${totalQuestions})`;
+  return {
+    correct: firstTryCorrect,
+    total: totalQuestions,
+    percent: Math.round((firstTryCorrect / totalQuestions) * 100),
+  };
+}
+
+function getProgressPercent(row, item) {
+  if (!row) {
+    return 0;
+  }
+
+  const total = getProgressTotal(row, item.totalItems);
+
+  if (!total) {
+    return row.completed ? 100 : 0;
+  }
+
+  if (item.type === "practice") {
+    const score = getPracticeScore(row, item.totalItems);
+    return score ? score.percent : Math.round(((row.current_index + 1) / total) * 100);
+  }
+
+  return row.completed ? 100 : Math.round(((row.current_index + 1) / total) * 100);
+}
+
+function getProgressStatus(row, item) {
+  if (!row) {
+    return "Not started";
+  }
+
+  if (row.completed) {
+    return "Completed";
+  }
+
+  const total = getProgressTotal(row, item.totalItems);
+
+  if (!total) {
+    return "In progress";
+  }
+
+  return item.type === "practice"
+    ? `Question ${row.current_index + 1} of ${total}`
+    : `Letter ${row.current_index + 1} of ${total}`;
+}
+
+function renderCourseCard(item, row) {
+  const score = item.type === "practice" ? getPracticeScore(row, item.totalItems) : null;
+  const percent = getProgressPercent(row, item);
+  const status = getProgressStatus(row, item);
+  const details = score
+    ? `Score: ${score.percent}% (${score.correct}/${score.total} first try)`
+    : item.type === "practice"
+      ? "No score yet"
+      : `${percent}% viewed`;
+  const actionText = row ? "Continue" : "Start";
+
+  return `
+    <article class="progress-card progress-card--${escapeHtml(item.type)}">
+      <div class="progress-card__main">
+        <div>
+          <p class="progress-kind">${escapeHtml(item.type)}</p>
+          <h3>${escapeHtml(item.label)}</h3>
+          <p>${escapeHtml(details)}</p>
+        </div>
+        <span class="status-pill">${escapeHtml(status)}</span>
+      </div>
+      <div class="progress-meter" aria-hidden="true">
+        <span style="width: ${Math.max(0, Math.min(percent, 100))}%"></span>
+      </div>
+      <a class="btn btn--small progress-card__link" href="${escapeHtml(item.href)}">${actionText}</a>
+    </article>
+  `;
+}
+
+function renderProgressSection(title, items, progressByKey) {
+  return `
+    <section class="progress-section">
+      <h2>${escapeHtml(title)}</h2>
+      <div class="progress-grid">
+        ${items.map((item) => renderCourseCard(item, progressByKey.get(item.key))).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderProgressDashboard(rows) {
+  const progressByKey = new Map(rows.map((row) => [row.page_key, row]));
+  const lessonItems = courseProgressItems.filter((item) => item.type === "lesson");
+  const practiceItems = courseProgressItems.filter((item) => item.type === "practice");
+
+  return `
+    ${renderProgressSection("Lesson Progress", lessonItems, progressByKey)}
+    ${renderProgressSection("Practice Scores", practiceItems, progressByKey)}
+  `;
 }
 
 async function saveProgress({
@@ -151,7 +297,7 @@ async function saveProgress({
     return null;
   }
 
-  await ensureProfile(user);
+  syncProfileInBackground(user);
 
   const row = {
     user_id: user.id,
@@ -178,6 +324,7 @@ async function saveProgress({
 }
 
 async function refreshAuthUI() {
+  const requestId = ++progressRefreshId;
   const authForm = document.getElementById("authForm");
   const authPanel = document.getElementById("authPanel");
   const authStatus = document.getElementById("authStatus");
@@ -200,29 +347,24 @@ async function refreshAuthUI() {
       signOutButton.hidden = false;
     }
 
-    const rows = await loadAllProgress();
-
     if (progressSummary) {
-      progressSummary.innerHTML = rows.length
-        ? rows
-            .map((row) => {
-              const label = row.page_key.replace(/-/g, " ");
-              const status = row.completed ? "Completed" : `Step ${row.current_index + 1}`;
-              const scoreText = getPracticeScoreText(row);
-              const details = scoreText ? `${row.page_type} - ${scoreText}` : row.page_type;
+      progressSummary.innerHTML = '<p class="muted">Loading saved progress...</p>';
 
-              return `
-                <article class="progress-card">
-                  <div>
-                    <h3>${label}</h3>
-                    <p>${details}</p>
-                  </div>
-                  <span class="status-pill">${status}</span>
-                </article>
-              `;
-            })
-            .join("")
-        : '<p class="muted">No saved progress yet.</p>';
+      void loadAllProgress()
+        .then((rows) => {
+          if (requestId !== progressRefreshId || authState.user?.id !== user.id) {
+            return;
+          }
+
+          progressSummary.innerHTML = renderProgressDashboard(rows);
+        })
+        .catch((error) => {
+          console.error("Failed to load progress summary", error);
+
+          if (requestId === progressRefreshId) {
+            progressSummary.innerHTML = '<p class="muted">Could not load saved progress yet.</p>';
+          }
+        });
     }
 
     return;
@@ -244,10 +386,14 @@ async function refreshAuthUI() {
 }
 
 async function signInWithEmailPassword(email, password) {
-  const { error } = await window.supabaseClient.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const { error } = await withTimeout(
+    window.supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    }),
+    15000,
+    "Signing in timed out."
+  );
 
   if (error) {
     throw error;
@@ -255,10 +401,14 @@ async function signInWithEmailPassword(email, password) {
 }
 
 async function signUpWithEmailPassword(email, password) {
-  const { data, error } = await window.supabaseClient.auth.signUp({
-    email,
-    password,
-  });
+  const { data, error } = await withTimeout(
+    window.supabaseClient.auth.signUp({
+      email,
+      password,
+    }),
+    15000,
+    "Signing up timed out."
+  );
 
   if (error) {
     throw error;
@@ -268,7 +418,11 @@ async function signUpWithEmailPassword(email, password) {
 }
 
 async function signOut() {
-  const { error } = await window.supabaseClient.auth.signOut();
+  const { error } = await withTimeout(
+    window.supabaseClient.auth.signOut(),
+    15000,
+    "Signing out timed out."
+  );
 
   if (error) {
     throw error;
@@ -276,26 +430,36 @@ async function signOut() {
 }
 
 const authReady = (async () => {
-  const { data } = await window.supabaseClient.auth.getSession();
-  authState.user = data.session?.user ?? null;
-  authState.initialized = true;
+  try {
+    const { data, error } = await window.supabaseClient.auth.getSession();
 
-  if (authState.user) {
-    await ensureProfile(authState.user);
+    if (error) {
+      console.error("Failed to get auth session", error);
+    }
+
+    authState.user = data?.session?.user ?? null;
+    authState.initialized = true;
+    syncProfileInBackground(authState.user);
+
+    return authState.user;
+  } catch (error) {
+    console.error("Failed to initialize auth", error);
+    authState.user = null;
+    authState.initialized = true;
+    return null;
   }
-
-  return authState.user;
 })();
 
-window.supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+window.supabaseClient.auth.onAuthStateChange((_event, session) => {
   authState.user = session?.user ?? null;
   authState.initialized = true;
+  syncProfileInBackground(authState.user);
 
-  if (authState.user) {
-    await ensureProfile(authState.user);
-  }
-
-  await refreshAuthUI();
+  setTimeout(() => {
+    void refreshAuthUI().catch((error) => {
+      console.error("Failed to refresh auth UI", error);
+    });
+  }, 0);
 });
 
 window.supabaseApp = {
