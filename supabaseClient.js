@@ -18,6 +18,9 @@ const authState = {
   initialized: false,
 };
 let progressRefreshId = 0;
+let progressSyncPromise = null;
+
+const LOCAL_PROGRESS_KEY = "lawOfSigns.progress";
 
 function getPageKey() {
   const fileName = window.location.pathname.split("/").pop() || "index.html";
@@ -96,6 +99,20 @@ function syncProfileInBackground(user) {
   });
 }
 
+async function refreshCurrentSession() {
+  const { data, error } = await window.supabaseClient.auth.getSession();
+
+  if (error) {
+    console.error("Failed to refresh auth session", error);
+  }
+
+  authState.user = data?.session?.user ?? null;
+  authState.initialized = true;
+  syncProfileInBackground(authState.user);
+
+  return authState.user;
+}
+
 async function getCurrentUser() {
   if (!authState.initialized) {
     await authReady;
@@ -104,12 +121,219 @@ async function getCurrentUser() {
   return authState.user;
 }
 
-async function loadProgress(pageKey = getPageKey()) {
-  const user = await getCurrentUser();
+function parseStoredProgress() {
+  try {
+    const stored = window.localStorage?.getItem(LOCAL_PROGRESS_KEY);
+    const rows = stored ? JSON.parse(stored) : [];
 
-  if (!user) {
+    return Array.isArray(rows) ? rows : [];
+  } catch (error) {
+    console.error("Failed to read local progress", error);
+    return [];
+  }
+}
+
+function normalizeProgressRow(row) {
+  if (!row?.page_key) {
     return null;
   }
+
+  return {
+    user_id: row.user_id ?? null,
+    page_key: row.page_key,
+    page_type: row.page_type || "lesson",
+    current_index: Number.isInteger(row.current_index) ? row.current_index : 0,
+    current_value: row.current_value ?? null,
+    completed: Boolean(row.completed),
+    total_items: Number.isInteger(row.total_items) ? row.total_items : 0,
+    meta: row.meta && typeof row.meta === "object" ? row.meta : {},
+    updated_at: row.updated_at || new Date().toISOString(),
+    needs_sync: row.needs_sync === true,
+  };
+}
+
+function getProgressTime(row) {
+  const time = Date.parse(row?.updated_at || "");
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function getLocalProgressKey(row) {
+  return `${row.user_id || "pending"}:${row.page_key}`;
+}
+
+function pickLatestProgress(current, next) {
+  if (!current) {
+    return next;
+  }
+
+  if (!next) {
+    return current;
+  }
+
+  return getProgressTime(next) >= getProgressTime(current) ? next : current;
+}
+
+function writeStoredProgress(rows) {
+  try {
+    const byKey = new Map();
+
+    rows.forEach((row) => {
+      const normalized = normalizeProgressRow(row);
+
+      if (!normalized) {
+        return;
+      }
+
+      const key = getLocalProgressKey(normalized);
+      byKey.set(key, pickLatestProgress(byKey.get(key), normalized));
+    });
+
+    const normalizedRows = [...byKey.values()].sort((a, b) => {
+      return getProgressTime(b) - getProgressTime(a);
+    });
+
+    window.localStorage?.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(normalizedRows));
+  } catch (error) {
+    console.error("Failed to store local progress", error);
+  }
+}
+
+function rememberProgressLocally(row) {
+  const normalized = normalizeProgressRow(row);
+
+  if (!normalized) {
+    return null;
+  }
+
+  writeStoredProgress([...parseStoredProgress(), normalized]);
+  return normalized;
+}
+
+function getRelevantLocalProgress(userId = null) {
+  return parseStoredProgress()
+    .map((row) => normalizeProgressRow(row))
+    .filter((row) => {
+      if (!row) {
+        return false;
+      }
+
+      if (!userId) {
+        return !row.user_id;
+      }
+
+      return !row.user_id || row.user_id === userId;
+    });
+}
+
+function getLocalProgress(pageKey, userId = null) {
+  return getRelevantLocalProgress(userId)
+    .filter((row) => row.page_key === pageKey)
+    .reduce((latest, row) => pickLatestProgress(latest, row), null);
+}
+
+function mergeProgressRows(remoteRows = [], localRows = []) {
+  const byPageKey = new Map();
+
+  [...remoteRows, ...localRows].forEach((row) => {
+    const normalized = normalizeProgressRow(row);
+
+    if (!normalized) {
+      return;
+    }
+
+    byPageKey.set(
+      normalized.page_key,
+      pickLatestProgress(byPageKey.get(normalized.page_key), normalized)
+    );
+  });
+
+  return [...byPageKey.values()].sort((a, b) => getProgressTime(b) - getProgressTime(a));
+}
+
+function toRemoteProgressRow(row, user) {
+  const normalized = normalizeProgressRow(row);
+
+  if (!normalized || !user) {
+    return null;
+  }
+
+  return {
+    user_id: user.id,
+    page_key: normalized.page_key,
+    page_type: normalized.page_type,
+    current_index: normalized.current_index,
+    current_value: normalized.current_value,
+    completed: normalized.completed,
+    total_items: normalized.total_items,
+    meta: normalized.meta,
+    updated_at: normalized.updated_at,
+  };
+}
+
+function markProgressSynced(rows, user) {
+  const syncedPageKeys = new Set(rows.map((row) => row.page_key));
+  const remainingRows = parseStoredProgress().filter((row) => {
+    if (!syncedPageKeys.has(row.page_key)) {
+      return true;
+    }
+
+    return row.user_id && row.user_id !== user.id;
+  });
+  const syncedRows = rows.map((row) => ({ ...row, user_id: user.id, needs_sync: false }));
+
+  writeStoredProgress([...remainingRows, ...syncedRows]);
+}
+
+async function syncLocalProgress(user = authState.user) {
+  if (!user) {
+    return [];
+  }
+
+  if (progressSyncPromise) {
+    return progressSyncPromise;
+  }
+
+  progressSyncPromise = (async () => {
+    const localRows = mergeProgressRows([], getRelevantLocalProgress(user.id)).filter((row) => {
+      return !row.user_id || row.needs_sync;
+    });
+    const remoteRows = localRows
+      .map((row) => toRemoteProgressRow(row, user))
+      .filter(Boolean);
+
+    if (!remoteRows.length) {
+      return [];
+    }
+
+    syncProfileInBackground(user);
+
+    const { error } = await window.supabaseClient
+      .from("progress")
+      .upsert(remoteRows, { onConflict: "user_id,page_key" });
+
+    if (error) {
+      console.error("Failed to sync local progress", error);
+      return localRows;
+    }
+
+    markProgressSynced(remoteRows, user);
+    return remoteRows;
+  })().finally(() => {
+    progressSyncPromise = null;
+  });
+
+  return progressSyncPromise;
+}
+
+async function loadProgress(pageKey = getPageKey()) {
+  const user = await getCurrentUser();
+  const localRow = getLocalProgress(pageKey, user?.id ?? null);
+
+  if (!user) {
+    return localRow;
+  }
+
+  await syncLocalProgress(user);
 
   const { data, error } = await window.supabaseClient
     .from("progress")
@@ -120,18 +344,21 @@ async function loadProgress(pageKey = getPageKey()) {
 
   if (error) {
     console.error("Failed to load progress", error);
-    return null;
+    return localRow;
   }
 
-  return data;
+  return pickLatestProgress(data, getLocalProgress(pageKey, user.id));
 }
 
 async function loadAllProgress() {
   const user = await getCurrentUser();
+  const localRows = mergeProgressRows([], getRelevantLocalProgress(user?.id ?? null));
 
   if (!user) {
-    return [];
+    return localRows;
   }
+
+  await syncLocalProgress(user);
 
   const { data, error } = await window.supabaseClient
     .from("progress")
@@ -141,10 +368,10 @@ async function loadAllProgress() {
 
   if (error) {
     console.error("Failed to load progress summary", error);
-    return [];
+    return localRows;
   }
 
-  return data ?? [];
+  return mergeProgressRows(data ?? [], getRelevantLocalProgress(user.id));
 }
 
 const courseProgressItems = [
@@ -236,7 +463,7 @@ function renderCourseCard(item, row) {
   const percent = getProgressPercent(row, item);
   const status = getProgressStatus(row, item);
   const details = score
-    ? `Score: ${score.percent}% (${score.correct}/${score.total} first try)`
+    ? `Score: ${score.percent}% (${score.correct}/${score.total})`
     : item.type === "practice"
       ? "No score yet"
       : `${percent}% viewed`;
@@ -291,16 +518,9 @@ async function saveProgress({
   totalItems = 0,
   meta = {},
 } = {}) {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return null;
-  }
-
-  syncProfileInBackground(user);
-
-  const row = {
-    user_id: user.id,
+  const updatedAt = new Date().toISOString();
+  const pendingRow = rememberProgressLocally({
+    user_id: authState.user?.id ?? null,
     page_key: pageKey,
     page_type: pageType,
     current_index: currentIndex,
@@ -308,8 +528,22 @@ async function saveProgress({
     completed,
     total_items: totalItems,
     meta,
-    updated_at: new Date().toISOString(),
-  };
+    updated_at: updatedAt,
+    needs_sync: true,
+  });
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return pendingRow;
+  }
+
+  syncProfileInBackground(user);
+
+  const row = pendingRow ? toRemoteProgressRow({ ...pendingRow, user_id: user.id }, user) : null;
+
+  if (!row) {
+    return pendingRow;
+  }
 
   const { error } = await window.supabaseClient
     .from("progress")
@@ -317,9 +551,10 @@ async function saveProgress({
 
   if (error) {
     console.error("Failed to save progress", error);
-    return null;
+    return pendingRow;
   }
 
+  markProgressSynced([row], user);
   return row;
 }
 
@@ -386,7 +621,7 @@ async function refreshAuthUI() {
 }
 
 async function signInWithEmailPassword(email, password) {
-  const { error } = await withTimeout(
+  const { data, error } = await withTimeout(
     window.supabaseClient.auth.signInWithPassword({
       email,
       password,
@@ -398,6 +633,15 @@ async function signInWithEmailPassword(email, password) {
   if (error) {
     throw error;
   }
+
+  await refreshCurrentSession();
+  try {
+    await syncLocalProgress(authState.user);
+  } catch (syncError) {
+    console.error("Failed to sync progress after sign in", syncError);
+  }
+
+  return data;
 }
 
 async function signUpWithEmailPassword(email, password) {
@@ -414,6 +658,13 @@ async function signUpWithEmailPassword(email, password) {
     throw error;
   }
 
+  await refreshCurrentSession();
+  try {
+    await syncLocalProgress(authState.user);
+  } catch (syncError) {
+    console.error("Failed to sync progress after sign up", syncError);
+  }
+
   return data;
 }
 
@@ -427,19 +678,17 @@ async function signOut() {
   if (error) {
     throw error;
   }
+
+  authState.user = null;
+  authState.initialized = true;
 }
 
 const authReady = (async () => {
   try {
-    const { data, error } = await window.supabaseClient.auth.getSession();
-
-    if (error) {
-      console.error("Failed to get auth session", error);
-    }
-
-    authState.user = data?.session?.user ?? null;
-    authState.initialized = true;
-    syncProfileInBackground(authState.user);
+    await refreshCurrentSession();
+    void syncLocalProgress(authState.user).catch((syncError) => {
+      console.error("Failed to sync saved progress", syncError);
+    });
 
     return authState.user;
   } catch (error) {
@@ -456,9 +705,15 @@ window.supabaseClient.auth.onAuthStateChange((_event, session) => {
   syncProfileInBackground(authState.user);
 
   setTimeout(() => {
-    void refreshAuthUI().catch((error) => {
-      console.error("Failed to refresh auth UI", error);
-    });
+    void syncLocalProgress(authState.user)
+      .catch((error) => {
+        console.error("Failed to sync saved progress", error);
+      })
+      .finally(() => {
+        void refreshAuthUI().catch((error) => {
+          console.error("Failed to refresh auth UI", error);
+        });
+      });
   }, 0);
 });
 
@@ -526,9 +781,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (signOutButton) {
       signOutButton.addEventListener("click", () => {
-        void signOut().catch((error) => {
-          setMessage(message, formatAuthError(error), true);
-        });
+        void (async () => {
+          try {
+            setMessage(message, "Signing out...");
+            await signOut();
+            await refreshAuthUI();
+          } catch (error) {
+            setMessage(message, formatAuthError(error), true);
+          }
+        })();
       });
     }
   }

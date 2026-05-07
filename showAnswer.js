@@ -110,7 +110,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     completeView.innerHTML = `
       <div class="practice-complete">
         <h3>Practice complete!</h3>
-        <p>You got ${percentCorrect}% right on the first try.</p>
+        <p>You got ${percentCorrect}% right.</p>
         <p>${firstTryCorrect} out of ${letters.length} correct.</p>
         <button class="btn" type="button" onclick="restartPractice()">Try again</button>
         <a class="btn" href="${document.body.dataset.practiceCompleteHref || "beginning.html"}">Back to lessons</a>
@@ -119,10 +119,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function completePractice() {
+  async function completePractice() {
     index = letters.length - 1;
     showCompleteView();
-    void persistProgress(true);
+    await persistProgress(true);
   }
 
   const savedProgress = await window.supabaseApp?.loadProgress?.(pageKey);
@@ -190,7 +190,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       correctSound.play().catch(() => {});
 
       if (index === letters.length - 1) {
-        completePractice();
+        await completePractice();
         return;
       }
 
@@ -209,7 +209,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     index++;
 
     if (index >= letters.length) {
-      completePractice();
+      await completePractice();
       return;
     }
 

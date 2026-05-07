@@ -1,7 +1,7 @@
 .unit-button {
     --button-offset: 0px;
     --button-image: none;
-
+    font-family: 'Bagel Fat One', sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -24,7 +24,15 @@
     transform: translateX(var(--button-offset));
     transform-origin: center;
     transition: transform 0.2s ease;
+    text-shadow: 5px 8px 8px rgba(0, 0, 0, 0.5);
 }
+
+.bagel-fat-one-regular {
+  font-family: "Bagel Fat One", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
 
 .unit-button:hover {
     transform: translateX(var(--button-offset)) scale(1.1);
