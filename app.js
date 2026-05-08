@@ -2,7 +2,7 @@ const SUPABASE_VIDEO_BASE_URL = "https://zophxtwisykqfhkfgmbp.supabase.co/storag
 
 function getVideoUrl(letter) {
   if (!letter) {
-    console.error("❌ Letter is undefined");
+    console.error("Letter is undefined");
     return "";
   }
 

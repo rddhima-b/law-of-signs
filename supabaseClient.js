@@ -7,7 +7,7 @@ if ("serviceWorker" in navigator && !window.siteServiceWorkerRegistered) {
   window.siteServiceWorkerRegistered = true;
 
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js").catch((error) => {
+    navigator.serviceWorker.register("./service-worker.js").catch((error) => {
       console.error("Failed to register service worker", error);
     });
   });
