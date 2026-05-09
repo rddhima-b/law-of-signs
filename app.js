@@ -1,5 +1,6 @@
 const SUPABASE_VIDEO_BASE_URL = "https://zophxtwisykqfhkfgmbp.supabase.co/storage/v1/object/public/videos/videos/";
 
+//used to get the url for a video
 function getVideoUrl(letter) {
   if (!letter) {
     console.error("Letter is undefined");

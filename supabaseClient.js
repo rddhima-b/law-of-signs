@@ -1,8 +1,18 @@
+/*
+  GPT-5 was used to help debug this file.
+  Prompts consisted of:
+  - "Why is progress syncing locally but not uploading/saving to Supabase when signed in?"
+  - "Why are the accounts taking forever to sign in or sign up, or sometimes not responding at all?"
+  - "Why are the videos and buttons not showing up after signing in?"
+*/
+
 const SUPABASE_URL = "https://zophxtwisykqfhkfgmbp.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvcGh4dHdpc3lrcWZoa2ZnbWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNDc4ODIsImV4cCI6MjA5MTgyMzg4Mn0.NKPSa_G_X6k4g954w_8_3apWK93iJ1Q5tK0uCXXVqrA";
 
+// Create one shared Supabase client and use it for the rest of the site.
 window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Register the service worker once so pages can use the app shell/offline caching behavior.
 if ("serviceWorker" in navigator && !window.siteServiceWorkerRegistered) {
   window.siteServiceWorkerRegistered = true;
 
@@ -13,20 +23,28 @@ if ("serviceWorker" in navigator && !window.siteServiceWorkerRegistered) {
   });
 }
 
+// Tracks the current authenticated user and whether the initial session check is finished.
 const authState = {
   user: null,
   initialized: false,
 };
+
+// Prevents older progress UI loads from overwriting newer ones.
 let progressRefreshId = 0;
+
+// Reuses an in-flight sync so multiple calls do not upload the same progress at once.
 let progressSyncPromise = null;
 
+// localStorage key where unsynced or offline progress is cached.
 const LOCAL_PROGRESS_KEY = "lawOfSigns.progress";
 
+// Builds a stable progress key from the current HTML file name.
 function getPageKey() {
   const fileName = window.location.pathname.split("/").pop() || "index.html";
   return fileName.replace(/\.html?$/i, "") || "index";
 }
 
+// Displays auth/progress messages and marks them as normal or error states for CSS.
 function setMessage(element, message, isError = false) {
   if (!element) {
     return;
@@ -36,6 +54,7 @@ function setMessage(element, message, isError = false) {
   element.dataset.state = isError ? "error" : "idle";
 }
 
+// Converts Supabase auth errors into friendlier messages for students.
 function formatAuthError(error) {
   const message = error?.message ?? "";
 
@@ -54,6 +73,7 @@ function formatAuthError(error) {
   return message || "Authentication failed.";
 }
 
+// Adds a timeout around Supabase auth requests so the UI does not hang forever.
 function withTimeout(promise, timeoutMs, timeoutMessage) {
   let timeoutId;
 
@@ -68,6 +88,7 @@ function withTimeout(promise, timeoutMs, timeoutMessage) {
   });
 }
 
+// Creates or updates the user's profile row whenever we know who is signed in.
 async function ensureProfile(user) {
   if (!user) {
     return null;
@@ -89,6 +110,7 @@ async function ensureProfile(user) {
   return user;
 }
 
+// Starts profile syncing without blocking the current UI flow.
 function syncProfileInBackground(user) {
   if (!user) {
     return;
@@ -99,6 +121,7 @@ function syncProfileInBackground(user) {
   });
 }
 
+// Reads the current Supabase session and refreshes the local auth state.
 async function refreshCurrentSession() {
   const { data, error } = await window.supabaseClient.auth.getSession();
 
@@ -113,6 +136,7 @@ async function refreshCurrentSession() {
   return authState.user;
 }
 
+// Waits for the first session lookup before returning the current user.
 async function getCurrentUser() {
   if (!authState.initialized) {
     await authReady;
@@ -121,6 +145,7 @@ async function getCurrentUser() {
   return authState.user;
 }
 
+// Safely reads saved progress from localStorage.
 function parseStoredProgress() {
   try {
     const stored = window.localStorage?.getItem(LOCAL_PROGRESS_KEY);
@@ -133,6 +158,7 @@ function parseStoredProgress() {
   }
 }
 
+// Converts any progress-like object into the expected app shape.
 function normalizeProgressRow(row) {
   if (!row?.page_key) {
     return null;
@@ -152,15 +178,18 @@ function normalizeProgressRow(row) {
   };
 }
 
+// Converts updated_at into a comparable timestamp.
 function getProgressTime(row) {
   const time = Date.parse(row?.updated_at || "");
   return Number.isNaN(time) ? 0 : time;
 }
 
+// Separates guest progress from signed-in user progress in localStorage.
 function getLocalProgressKey(row) {
   return `${row.user_id || "pending"}:${row.page_key}`;
 }
 
+// Keeps whichever progress row has the newest updated_at value.
 function pickLatestProgress(current, next) {
   if (!current) {
     return next;
@@ -173,6 +202,7 @@ function pickLatestProgress(current, next) {
   return getProgressTime(next) >= getProgressTime(current) ? next : current;
 }
 
+// Deduplicates, sorts, and saves progress rows back to localStorage.
 function writeStoredProgress(rows) {
   try {
     const byKey = new Map();
@@ -198,6 +228,7 @@ function writeStoredProgress(rows) {
   }
 }
 
+// Saves a progress update locally first so progress is not lost if the user is offline.
 function rememberProgressLocally(row) {
   const normalized = normalizeProgressRow(row);
 
@@ -209,6 +240,7 @@ function rememberProgressLocally(row) {
   return normalized;
 }
 
+// Returns local progress relevant to either a guest user or a signed-in user.
 function getRelevantLocalProgress(userId = null) {
   return parseStoredProgress()
     .map((row) => normalizeProgressRow(row))
@@ -225,12 +257,14 @@ function getRelevantLocalProgress(userId = null) {
     });
 }
 
+// Finds the newest local progress row for a single page.
 function getLocalProgress(pageKey, userId = null) {
   return getRelevantLocalProgress(userId)
     .filter((row) => row.page_key === pageKey)
     .reduce((latest, row) => pickLatestProgress(latest, row), null);
 }
 
+// Merges local and remote progress, keeping the newest row for each page.
 function mergeProgressRows(remoteRows = [], localRows = []) {
   const byPageKey = new Map();
 
@@ -250,6 +284,7 @@ function mergeProgressRows(remoteRows = [], localRows = []) {
   return [...byPageKey.values()].sort((a, b) => getProgressTime(b) - getProgressTime(a));
 }
 
+// Converts a local progress row into the column shape expected by Supabase.
 function toRemoteProgressRow(row, user) {
   const normalized = normalizeProgressRow(row);
 
@@ -270,6 +305,7 @@ function toRemoteProgressRow(row, user) {
   };
 }
 
+// Marks successfully uploaded local rows as synced for this signed-in user.
 function markProgressSynced(rows, user) {
   const syncedPageKeys = new Set(rows.map((row) => row.page_key));
   const remainingRows = parseStoredProgress().filter((row) => {
@@ -284,6 +320,7 @@ function markProgressSynced(rows, user) {
   writeStoredProgress([...remainingRows, ...syncedRows]);
 }
 
+// Uploads any guest/offline progress that still needs to be saved to Supabase.
 async function syncLocalProgress(user = authState.user) {
   if (!user) {
     return [];
@@ -325,6 +362,7 @@ async function syncLocalProgress(user = authState.user) {
   return progressSyncPromise;
 }
 
+// Loads progress for the current page, falling back to localStorage if Supabase fails.
 async function loadProgress(pageKey = getPageKey()) {
   const user = await getCurrentUser();
   const localRow = getLocalProgress(pageKey, user?.id ?? null);
@@ -350,6 +388,7 @@ async function loadProgress(pageKey = getPageKey()) {
   return pickLatestProgress(data, getLocalProgress(pageKey, user.id));
 }
 
+// Loads all lesson/practice progress for the dashboard view.
 async function loadAllProgress() {
   const user = await getCurrentUser();
   const localRows = mergeProgressRows([], getRelevantLocalProgress(user?.id ?? null));
@@ -374,6 +413,7 @@ async function loadAllProgress() {
   return mergeProgressRows(data ?? [], getRelevantLocalProgress(user.id));
 }
 
+// Defines every course item shown in the progress dashboard.
 const courseProgressItems = [
   { key: "lesson1", type: "lesson", label: "Lesson 1: A-E", href: "lesson1.html", totalItems: 5 },
   { key: "lesson2", type: "lesson", label: "Lesson 2: F-J", href: "lesson2.html", totalItems: 5 },
@@ -387,6 +427,7 @@ const courseProgressItems = [
   { key: "practice5", type: "practice", label: "Practice V-Z", href: "practice5.html", totalItems: 5 },
 ];
 
+// Escapes dynamic text before placing it inside HTML templates.
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -396,6 +437,7 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+// Figures out the total number of letters/questions for a progress row.
 function getProgressTotal(row, fallbackTotal) {
   if (Array.isArray(row?.meta?.letters)) {
     return row.meta.letters.length;
@@ -404,6 +446,7 @@ function getProgressTotal(row, fallbackTotal) {
   return row?.total_items || fallbackTotal || 0;
 }
 
+// Calculates a practice score when first-try correctness data is available.
 function getPracticeScore(row, fallbackTotal) {
   const totalQuestions = getProgressTotal(row, fallbackTotal);
   const firstTryCorrect = row?.meta?.firstTryCorrect;
@@ -419,6 +462,7 @@ function getPracticeScore(row, fallbackTotal) {
   };
 }
 
+// Converts a progress row into a 0-100 percent value for the progress meter.
 function getProgressPercent(row, item) {
   if (!row) {
     return 0;
@@ -438,6 +482,7 @@ function getProgressPercent(row, item) {
   return row.completed ? 100 : Math.round(((row.current_index + 1) / total) * 100);
 }
 
+// Creates the human-readable status text shown on each dashboard card.
 function getProgressStatus(row, item) {
   if (!row) {
     return "Not started";
@@ -458,6 +503,7 @@ function getProgressStatus(row, item) {
     : `Letter ${row.current_index + 1} of ${total}`;
 }
 
+// Renders one lesson or practice card for the progress dashboard.
 function renderCourseCard(item, row) {
   const score = item.type === "practice" ? getPracticeScore(row, item.totalItems) : null;
   const percent = getProgressPercent(row, item);
@@ -487,6 +533,7 @@ function renderCourseCard(item, row) {
   `;
 }
 
+// Renders a group of progress cards under one section heading.
 function renderProgressSection(title, items, progressByKey) {
   return `
     <section class="progress-section">
@@ -498,6 +545,7 @@ function renderProgressSection(title, items, progressByKey) {
   `;
 }
 
+// Renders the full dashboard by splitting lessons and practice into separate sections.
 function renderProgressDashboard(rows) {
   const progressByKey = new Map(rows.map((row) => [row.page_key, row]));
   const lessonItems = courseProgressItems.filter((item) => item.type === "lesson");
@@ -509,6 +557,7 @@ function renderProgressDashboard(rows) {
   `;
 }
 
+// Saves a lesson/practice progress update locally first, then uploads it when signed in.
 async function saveProgress({
   pageKey = getPageKey(),
   pageType = "lesson",
@@ -558,6 +607,7 @@ async function saveProgress({
   return row;
 }
 
+// Refreshes the auth panel and progress dashboard based on the current signed-in state.
 async function refreshAuthUI() {
   const requestId = ++progressRefreshId;
   const authForm = document.getElementById("authForm");
@@ -620,6 +670,7 @@ async function refreshAuthUI() {
   }
 }
 
+// Signs in with email/password, refreshes the session, and syncs any saved local progress.
 async function signInWithEmailPassword(email, password) {
   const { data, error } = await withTimeout(
     window.supabaseClient.auth.signInWithPassword({
@@ -644,6 +695,7 @@ async function signInWithEmailPassword(email, password) {
   return data;
 }
 
+// Creates an account with email/password, then syncs progress if a session is available.
 async function signUpWithEmailPassword(email, password) {
   const { data, error } = await withTimeout(
     window.supabaseClient.auth.signUp({
@@ -668,6 +720,7 @@ async function signUpWithEmailPassword(email, password) {
   return data;
 }
 
+// Signs out through Supabase and clears the local auth state.
 async function signOut() {
   const { error } = await withTimeout(
     window.supabaseClient.auth.signOut(),
@@ -683,6 +736,7 @@ async function signOut() {
   authState.initialized = true;
 }
 
+// Starts auth initialization immediately so pages can await a ready session.
 const authReady = (async () => {
   try {
     await refreshCurrentSession();
@@ -699,6 +753,7 @@ const authReady = (async () => {
   }
 })();
 
+// Responds to Supabase auth changes, then syncs progress and refreshes the UI.
 window.supabaseClient.auth.onAuthStateChange((_event, session) => {
   authState.user = session?.user ?? null;
   authState.initialized = true;
@@ -717,6 +772,7 @@ window.supabaseClient.auth.onAuthStateChange((_event, session) => {
   }, 0);
 });
 
+// Public API used by lesson/practice pages to read auth state and save/load progress.
 window.supabaseApp = {
   authReady,
   getCurrentUser,
@@ -730,6 +786,7 @@ window.supabaseApp = {
   signOut,
 };
 
+// Wires the sign in/sign up/sign out controls once the page HTML is ready.
 document.addEventListener("DOMContentLoaded", () => {
   const authForm = document.getElementById("authForm");
   const signInButton = document.getElementById("signInButton");

@@ -1,5 +1,6 @@
 const CACHE_NAME = "law-of-signs-cache";
 
+/* prompt "make the service worker work for this pwa" was used to help copilot edit this code */
 const STATIC_ASSETS = [
   "/",
   "/index.html",

@@ -41,11 +41,13 @@
 .unit-button--seashell {
     --button-image: url("images/seashell-clipart.svg");
 }
+/* seashell image from: https://creazilla.com/media/clipart/77367/seashell */
 
 .unit-button--coconut {
     --button-image: url("images/coconut.png");
     font-size: clamp(18px, 4vw, 30px);
 }
+/* coconut image from: https://gallery.yopriceville.com/Free-Clipart-Pictures/Fruit-PNG/Coconut_Transparent_Clip_Art_Image-844272291 */
 
 .btn1 { --button-offset: -70px; }
 .btn2 { --button-offset: 70px; }
